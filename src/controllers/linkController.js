@@ -59,6 +59,7 @@ export const upsertLink = async (req, res) => {
                 link.originalUrl = originalUrl;
                 link.title = title;
                 link.favicon = favicon;
+                link.isActive = true; // Reactivate on update
                 await link.save();
                 return res.status(200).json({ success: true, data: link, message: 'Link updated' });
             } else {
