@@ -38,48 +38,48 @@ const getMetadata = async (url) => {
 // @desc    Create or Update Link
 // @route   POST /api/links
 export const upsertLink = async (req, res) => {
-    const { originalUrl, customAlias, title: manualTitle, favicon: manualFavicon } = req.body;
-
     try {
-        // Scrape first, but override with manual values if provided
-        let scrapedData = { title: '', favicon: '' };
+        // Strategy: Check existence FIRST.
+        const { originalUrl, customAlias, title: manualTitle, favicon: manualFavicon } = req.body;
 
-        // Only scrape if we are changing URL or don't have manual values
-        if (!manualTitle || !manualFavicon) {
-            scrapedData = await getMetadata(originalUrl);
-        }
-
-        const title = manualTitle || scrapedData.title;
-        const favicon = manualFavicon || scrapedData.favicon;
-
+        let link = null;
         if (customAlias) {
-            let link = await Link.findOne({ shortCode: customAlias });
-
-            if (link) {
-                link.originalUrl = originalUrl;
-                link.title = title;
-                link.favicon = favicon;
-                link.isActive = true; // Reactivate on update
-                await link.save();
-                return res.status(200).json({ success: true, data: link, message: 'Link updated' });
-            } else {
-                link = await Link.create({
-                    originalUrl,
-                    shortCode: customAlias,
-                    title,
-                    favicon
-                });
-                return res.status(201).json({ success: true, data: link, message: 'Link created' });
-            }
+            link = await Link.findOne({ shortCode: customAlias });
         }
 
-        // Standard Create
-        const link = await Link.create({
-            originalUrl,
-            title,
-            favicon
-        });
-        res.status(201).json({ success: true, data: link });
+        if (link) {
+            // --- UPDATE EXISTING ---
+            link.originalUrl = originalUrl;
+            link.isActive = true; // Reactivate
+
+            // Only update metadata if explicitly provided in request
+            // This preserves the old "Jio TV" title even if URL changes, unless user manually edits it
+            if (manualTitle) link.title = manualTitle;
+            if (manualFavicon) link.favicon = manualFavicon;
+
+            await link.save();
+            return res.status(200).json({ success: true, data: link, message: 'Link updated' });
+
+        } else {
+            // --- CREATE NEW ---
+            let title = manualTitle;
+            let favicon = manualFavicon;
+
+            // Only scrape if we don't have manual values
+            if (!title || !favicon) {
+                const scraped = await getMetadata(originalUrl);
+                if (!title) title = scraped.title;
+                if (!favicon) favicon = scraped.favicon;
+            }
+
+            link = await Link.create({
+                originalUrl,
+                shortCode: customAlias,
+                title,
+                favicon
+            });
+            return res.status(201).json({ success: true, data: link, message: 'Link created' });
+        }
 
     } catch (error) {
         console.error(error);
@@ -161,10 +161,6 @@ export const redirectLink = async (req, res) => {
         } catch (error) {
             // Check if 5xx or Network Error
             console.error(`Health Check Failed for ${link.originalUrl}:`, error.message);
-
-            // AUTO-DEACTIVATE: as per user request
-            link.isActive = false;
-            await link.save();
 
             let errorMsg = 'The destination service is currently unreachable.';
             let errorSub = 'This link has been automatically marked as INACTIVE because the destination server is down.';
