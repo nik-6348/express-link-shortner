@@ -8,6 +8,37 @@ const totalClicksEl = document.getElementById('total-clicks');
 const domainPrefixEl = document.getElementById('domain-prefix');
 const refreshBtn = document.getElementById('refresh-btn');
 const toast = document.getElementById('toast');
+const logoutBtn = document.getElementById('logout-btn');
+
+// --- AUTHENTICATION ---
+const token = localStorage.getItem('token');
+if (!token) {
+    window.location.href = '/login.html';
+}
+
+function getHeaders() {
+    return {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+    };
+}
+
+async function checkAuth(res) {
+    if (res.status === 401) {
+        localStorage.removeItem('token');
+        window.location.href = '/login.html';
+        return false;
+    }
+    return true;
+}
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login.html';
+    });
+}
+// -----------------------
 
 // Set domain prefix
 domainPrefixEl.textContent = window.location.host + '/';
@@ -15,7 +46,9 @@ domainPrefixEl.textContent = window.location.host + '/';
 // Fetch and Display Links
 async function fetchLinks() {
     try {
-        const res = await fetch(API_URL);
+        const res = await fetch(API_URL, { headers: getHeaders() });
+        if (!checkAuth(res)) return;
+
         const data = await res.json();
 
         if (data.success) {
@@ -45,7 +78,6 @@ function renderTable(links) {
                      ${link.favicon ? `<img src="${link.favicon}" style="width:20px; height:20px; border-radius:4px" onerror="this.style.display='none'">` : ''}
                      <a href="${fullShortUrl}" target="_blank">${link.shortCode}</a>
                 </div>
-                <!-- Controls below -->
                 <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
                 <button class="btn-action" onclick="copyToClipboard('${fullShortUrl}')" title="Copy">
                     <i class="fa-regular fa-copy"></i>
@@ -55,7 +87,12 @@ function renderTable(links) {
                 </button>
                 </div>
             </td>
-            <td class="dest-cell" title="${link.originalUrl}">${link.originalUrl}</td>
+            <td class="dest-cell" title="${link.originalUrl}">
+                <div>${link.originalUrl}</div>
+                <div style="font-size:0.8em; color:var(--text-secondary); margin-top:0.25rem;">
+                    <i class="fa-solid fa-heading"></i> ${link.title || 'No Title'}
+                </div>
+            </td>
             <td>${link.clicks}</td>
             <td>
                 <span class="status-badge ${link.isActive ? 'status-active' : 'status-inactive'}">
@@ -63,7 +100,7 @@ function renderTable(links) {
                 </span>
             </td>
             <td class="actions-cell">
-                <button class="btn-action" onclick="editLink('${link.shortCode}', '${link.originalUrl}')" title="Edit">
+                <button class="btn-action" onclick="editLink('${link.shortCode}', '${link.originalUrl}', '${link.title || ''}', '${link.favicon || ''}')" title="Edit">
                     <i class="fa-solid fa-pen"></i>
                 </button>
                 <button class="btn-action" onclick="toggleStatus('${link._id}')" title="Toggle Status">
@@ -87,19 +124,28 @@ form.addEventListener('submit', async (e) => {
 
     const originalUrl = document.getElementById('originalUrl').value;
     const customAlias = document.getElementById('customAlias').value;
+    const title = document.getElementById('customTitle').value;
+    const favicon = document.getElementById('customFavicon').value;
 
     try {
+        const body = { originalUrl, customAlias };
+        if (title) body.title = title;
+        if (favicon) body.favicon = favicon;
+
         const res = await fetch(API_URL, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ originalUrl, customAlias })
+            headers: getHeaders(),
+            body: JSON.stringify(body)
         });
+
+        if (!checkAuth(res)) return;
 
         const data = await res.json();
 
         if (data.success) {
             showToast(data.message || 'Link processed successfully!');
             form.reset();
+            // Reset hidden fields toggling if needed, or just clear values
             fetchLinks();
         } else {
             showToast(data.message || 'Error occurred', true);
@@ -117,7 +163,8 @@ window.copyToClipboard = (text) => {
 
 window.toggleStatus = async (id) => {
     try {
-        await fetch(`${API_URL}/${id}/toggle`, { method: 'PUT' });
+        const res = await fetch(`${API_URL}/${id}/toggle`, { method: 'PUT', headers: getHeaders() });
+        if (!checkAuth(res)) return;
         fetchLinks();
         showToast('Status updated');
     } catch (error) {
@@ -125,22 +172,23 @@ window.toggleStatus = async (id) => {
     }
 };
 
-window.editLink = (shortCode, originalUrl) => {
+window.editLink = (shortCode, originalUrl, title, favicon) => {
     document.getElementById('originalUrl').value = originalUrl;
     document.getElementById('customAlias').value = shortCode;
+
+    // Expand advanced fields if they exist
+    document.getElementById('customTitle').value = title;
+    document.getElementById('customFavicon').value = favicon;
+
     document.querySelector('.form-section').scrollIntoView({ behavior: 'smooth' });
-    document.getElementById('originalUrl').focus();
     showToast('Loaded into form for editing');
 };
 
 window.generateQR = (url) => {
-    // Simple alert for now, can be improved to show modal with image
     const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
-    // Create a simple modal or open new tab
     window.open(qrApi, '_blank');
 };
 
-// Utilities
 function showToast(msg, isError = false) {
     toast.textContent = msg;
     toast.style.borderColor = isError ? 'var(--danger-color)' : 'var(--success-color)';

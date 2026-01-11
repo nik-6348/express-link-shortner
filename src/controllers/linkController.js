@@ -38,10 +38,19 @@ const getMetadata = async (url) => {
 // @desc    Create or Update Link
 // @route   POST /api/links
 export const upsertLink = async (req, res) => {
-    const { originalUrl, customAlias } = req.body;
+    const { originalUrl, customAlias, title: manualTitle, favicon: manualFavicon } = req.body;
 
     try {
-        const { title, favicon } = await getMetadata(originalUrl);
+        // Scrape first, but override with manual values if provided
+        let scrapedData = { title: '', favicon: '' };
+
+        // Only scrape if we are changing URL or don't have manual values
+        if (!manualTitle || !manualFavicon) {
+            scrapedData = await getMetadata(originalUrl);
+        }
+
+        const title = manualTitle || scrapedData.title;
+        const favicon = manualFavicon || scrapedData.favicon;
 
         if (customAlias) {
             let link = await Link.findOne({ shortCode: customAlias });

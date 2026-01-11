@@ -1,12 +1,19 @@
 import express from 'express';
 import { upsertLink, getLinks, redirectLink, toggleLinkStatus } from '../controllers/linkController.js';
+import { registerUser, loginUser } from '../controllers/authController.js';
+import { protect } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
+// Auth Routes
+// router.post('/api/auth/register', registerUser); // Disabled public registration
+router.post('/api/auth/login', loginUser);
+
 // API Routes
-router.post('/api/links', upsertLink);
-router.get('/api/links', getLinks);
-router.put('/api/links/:id/toggle', toggleLinkStatus);
+router.post('/api/links', protect, upsertLink);
+router.get('/api/links', protect, getLinks); // Now protected
+router.put('/api/links/:id/toggle', protect, toggleLinkStatus);
+
 
 // Redirect Route (Catch-all for shortcodes, strictly needs to be checked last or separate)
 // We'll export this and mount it appropriately in server.js

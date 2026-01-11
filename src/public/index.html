@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
 
     <div class="background-blobs">
@@ -21,7 +23,7 @@
     </div>
 
     <div class="container">
-        
+
         <!-- Header -->
         <header>
             <div class="logo">
@@ -36,12 +38,17 @@
                     <span class="stat-label">Total Clicks</span>
                     <span class="stat-value" id="total-clicks">0</span>
                 </div>
+                <button id="logout-btn" class="btn-icon"
+                    style="margin-left:1rem; border-color:var(--danger-color); color:var(--danger-color);"
+                    title="Logout">
+                    <i class="fa-solid fa-sign-out-alt"></i>
+                </button>
             </div>
         </header>
 
         <!-- Main Content Grid -->
         <main class="dashboard-grid">
-            
+
             <!-- Create/Update Form -->
             <section class="card form-section">
                 <h2><i class="fa-solid fa-plus-circle"></i> Create or Update Link</h2>
@@ -50,18 +57,33 @@
                         <label for="originalUrl">Destination URL</label>
                         <input type="url" id="originalUrl" placeholder="https://example.com/very-long-url" required>
                     </div>
-                    
+
                     <div class="input-group">
                         <label for="customAlias">Custom Alias (Optional)</label>
                         <div class="alias-input-wrapper">
                             <span class="domain-prefix" id="domain-prefix">.../</span>
                             <input type="text" id="customAlias" placeholder="my-link">
                         </div>
-                        <small>Enter an existing alias to update its destination.</small>
                     </div>
 
+                    <!-- Metadata Overrides -->
+                    <details style="margin-bottom:1.5rem; color:var(--text-secondary); cursor:pointer;">
+                        <summary style="font-size:0.9rem;">Advanced: Custom Metadata <i class="fa-solid fa-chevron-down"
+                                style="font-size:0.8em"></i></summary>
+                        <div style="margin-top:1rem; padding-left:0.5rem; border-left:2px solid var(--border-color);">
+                            <div class="input-group">
+                                <label for="customTitle">Custom Title</label>
+                                <input type="text" id="customTitle" placeholder="e.g. My Website Home">
+                            </div>
+                            <div class="input-group">
+                                <label for="customFavicon">Custom Favicon URL</label>
+                                <input type="url" id="customFavicon" placeholder="https://example.com/logo.png">
+                            </div>
+                        </div>
+                    </details>
+
                     <button type="submit" class="btn-primary">
-                        <span class="btn-text">Shorten URL</span>
+                        <span class="btn-text">Shorten / Update URL</span>
                         <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </form>
@@ -73,7 +95,7 @@
                     <h2><i class="fa-solid fa-list"></i> Your Shortlinks</h2>
                     <button class="btn-icon" id="refresh-btn" title="Refresh"><i class="fa-solid fa-sync"></i></button>
                 </div>
-                
+
                 <div class="table-container">
                     <table>
                         <thead>
@@ -99,4 +121,5 @@
 
     <script src="script.js"></script>
 </body>
+
 </html>
