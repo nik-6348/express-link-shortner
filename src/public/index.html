@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShortLink | Premium URL Shortener</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for Premium Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="background-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="container">
+        
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <i class="fa-solid fa-bolt"></i> ShortLink
+            </div>
+            <div class="stats-overview">
+                <div class="stat-card">
+                    <span class="stat-label">Total Links</span>
+                    <span class="stat-value" id="total-links">0</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Total Clicks</span>
+                    <span class="stat-value" id="total-clicks">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Grid -->
+        <main class="dashboard-grid">
+            
+            <!-- Create/Update Form -->
+            <section class="card form-section">
+                <h2><i class="fa-solid fa-plus-circle"></i> Create or Update Link</h2>
+                <form id="shorten-form">
+                    <div class="input-group">
+                        <label for="originalUrl">Destination URL</label>
+                        <input type="url" id="originalUrl" placeholder="https://example.com/very-long-url" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="customAlias">Custom Alias (Optional)</label>
+                        <div class="alias-input-wrapper">
+                            <span class="domain-prefix" id="domain-prefix">.../</span>
+                            <input type="text" id="customAlias" placeholder="my-link">
+                        </div>
+                        <small>Enter an existing alias to update its destination.</small>
+                    </div>
+
+                    <button type="submit" class="btn-primary">
+                        <span class="btn-text">Shorten URL</span>
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+            </section>
+
+            <!-- Link List -->
+            <section class="card list-section">
+                <div class="section-header">
+                    <h2><i class="fa-solid fa-list"></i> Your Shortlinks</h2>
+                    <button class="btn-icon" id="refresh-btn" title="Refresh"><i class="fa-solid fa-sync"></i></button>
+                </div>
+                
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Short Link</th>
+                                <th>Destination</th>
+                                <th>Clicks</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="links-table-body">
+                            <!-- Links injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">Action Successful</div>
+
+    <script src="script.js"></script>
+</body>
+</html>
