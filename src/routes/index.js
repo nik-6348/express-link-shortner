@@ -10,8 +10,8 @@ const router = express.Router();
 router.post('/api/auth/login', loginUser);
 
 // API Routes
-router.post('/api/links', protect, upsertLink);
-router.get('/api/links', protect, getLinks); // Now protected
+router.post('/api/links', upsertLink); // Public for script access (as requested)
+router.get('/api/links', protect, getLinks); // Protected List (Dashboard only)
 router.put('/api/links/:id/toggle', protect, toggleLinkStatus);
 
 
