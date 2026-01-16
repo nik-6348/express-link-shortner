@@ -145,41 +145,8 @@ export const redirectLink = async (req, res) => {
             return res.status(404).send(renderPage('Link Not Found', 'fa-solid fa-link-slash', 'Link Not Found', 'The link you are looking for does not exist or has been removed.'));
         }
 
-        // 2. Check Database Active Status
-        if (!link.isActive) {
-            return res.status(410).send(renderPage('Link Inactive', 'fa-solid fa-ban', 'Link is Inactive', 'This link has been deactivated by the administrator.'));
-        }
-
-        // 3. TARGET HEALTH CHECK (New Feature)
-        try {
-            await axios.get(link.originalUrl, {
-                timeout: 5000, // 5s timeout
-                validateStatus: function (status) {
-                    return status < 500; // Resolve only if status < 500
-                }
-            });
-        } catch (error) {
-            // Check if 5xx or Network Error
-            console.error(`Health Check Failed for ${link.originalUrl}:`, error.message);
-
-            let errorMsg = 'The destination service is currently unreachable.';
-            let errorSub = 'This link has been automatically marked as INACTIVE because the destination server is down.';
-
-            if (error.response) {
-                // The request was made and the server responded with a status code >= 500
-                errorMsg = `Destination Service Error (${error.response.status})`;
-                errorSub = 'The target website is experiencing internal issues. System has paused this link.';
-            }
-
-            return res.status(502).send(renderPage('Service Down', 'fa-solid fa-server', errorMsg, errorSub));
-        }
-
-        // 4. Update Stats (Async)
-        link.clicks++;
-        link.lastAccessed = new Date();
-        link.save();
-
-        // 5. Serve Redirect Loading Page
+    
+        // 2. Serve Redirect Loading Page
         const html = `
 <!DOCTYPE html>
 <html lang="en">
